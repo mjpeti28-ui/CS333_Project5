@@ -1,3 +1,11 @@
+/**
+ * @file word_counter.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Counts word frequencies from a text file using a linked list backend.
+ */
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -22,12 +30,14 @@ typedef struct WordCount {
     size_t count;
 } WordCount;
 
+/* Lowercase a word in place. */
 static void to_lowercase(char *word) {
     for (char *p = word; *p; ++p) {
         *p = (char)tolower((unsigned char)*p);
     }
 }
 
+/* Heap-duplicate a NUL-terminated word. */
 static char *duplicate_word(const char *word) {
     size_t length = strlen(word) + 1;
     char *copy = (char *)malloc(length);
@@ -39,6 +49,7 @@ static char *duplicate_word(const char *word) {
     return copy;
 }
 
+/* Allocate a WordCount struct initialised to 1. */
 static WordCount *create_wordcount(const char *word) {
     WordCount *wc = (WordCount *)malloc(sizeof(*wc));
     if (!wc) {
@@ -53,12 +64,14 @@ static WordCount *create_wordcount(const char *word) {
 /* Extension: track whether we truncated any token due to MAX_WORD_LENGTH. */
 static int g_truncated_token_seen = 0;
 
+/* Compare a WordCount payload to a raw string key. */
 static int comp_word_to_key(void *payload, void *target) {
     const WordCount *wc = (const WordCount *)payload;
     const char *key = (const char *)target;
     return wc && wc->word && key && strcmp(wc->word, key) == 0;
 }
 
+/* Dispose of a WordCount payload. */
 static void free_wordcount(void *payload) {
     if (!payload) return;
     WordCount *wc = (WordCount *)payload;
@@ -66,6 +79,7 @@ static void free_wordcount(void *payload) {
     free(wc);
 }
 
+/* Find or append a word entry and increment its count. */
 static void add_or_increment(LinkedList *list, const char *word) {
     WordCount *found = (WordCount *)ll_find(list, (void *)word, comp_word_to_key);
     if (found) {
@@ -76,6 +90,7 @@ static void add_or_increment(LinkedList *list, const char *word) {
     ll_append(list, wc);
 }
 
+/* Tokenize the next alphanumeric word from the file. */
 static int read_next_word(FILE *file, char *buffer, size_t buffer_size) {
     int ch;
     size_t index = 0;
@@ -116,6 +131,7 @@ static int read_next_word(FILE *file, char *buffer, size_t buffer_size) {
     return 1;
 }
 
+/* Sort comparator for descending frequency then alphabetically. */
 static int cmp_wordcount_desc(const void *a, const void *b) {
     const WordCount *wa = *(const WordCount *const *)a;
     const WordCount *wb = *(const WordCount *const *)b;
@@ -125,6 +141,7 @@ static int cmp_wordcount_desc(const void *a, const void *b) {
     return strcmp(wa->word, wb->word);
 }
 
+/* Copy the linked list contents into a flat array. */
 static WordCount **list_to_array(LinkedList *list, size_t *out_size) {
     int n = ll_size(list);
     if (n < 0) n = 0;
@@ -141,6 +158,7 @@ static WordCount **list_to_array(LinkedList *list, size_t *out_size) {
     return array;
 }
 
+/* Emit up to 'limit' of the most frequent words. */
 static void print_top_words(LinkedList *list, size_t limit) {
     size_t size = 0;
     WordCount **array = list_to_array(list, &size);
@@ -154,6 +172,7 @@ static void print_top_words(LinkedList *list, size_t limit) {
     free(array);
 }
 
+/* Entry point: parse args, build counts, dump top 20. */
 int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <file>\n", argv[0]);

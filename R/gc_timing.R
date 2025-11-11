@@ -6,6 +6,7 @@ iterations <- if (length(args) >= 1) as.integer(args[[1]]) else 300L
 if (is.na(iterations) || iterations <= 0L) iterations <- 300L
 
 # Work function: allocates and discards lots of memory
+# Create lots of short-lived allocations to provoke GC.
 alloc_burst <- function(n = 20000L, size = 100L) {
   # n vectors of 'size' doubles; then drop references
   x <- vector("list", n)
@@ -14,6 +15,7 @@ alloc_burst <- function(n = 20000L, size = 100L) {
   sum(vapply(x, sum, numeric(1)))
 }
 
+# Measure runtime of alloc_burst() across iterations.
 measure <- function(iters) {
   times <- numeric(iters)
   for (i in seq_len(iters)) {
@@ -25,6 +27,7 @@ measure <- function(iters) {
   times
 }
 
+# Identify slow iterations likely caused by GC pauses.
 flag_spikes <- function(times, k = 3) {
   med <- median(times)
   mad <- stats::mad(times, constant = 1.4826)
@@ -32,6 +35,7 @@ flag_spikes <- function(times, k = 3) {
   list(threshold = thr, spikes = which(times > thr))
 }
 
+# Entry point: run the experiment and print summary stats.
 main <- function() {
   cat(sprintf("Running %d iterations...\n", iterations))
   # warm up

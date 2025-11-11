@@ -1,14 +1,14 @@
-#include <stdlib.h>
-
-#include "linkedlist.h"
-
 /**
  * @file linkedlist.c
  * @author Max Petite
- * @date 2025-10-30
+ * @date 2025-11-11
  *
  * Implements the generic singly linked list API.
  */
+
+#include <stdlib.h>
+
+#include "linkedlist.h"
 
 /* Allocates and initialises an empty list handle. */
 LinkedList *ll_create(void) {

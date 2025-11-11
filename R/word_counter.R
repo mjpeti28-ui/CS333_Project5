@@ -2,6 +2,7 @@
 # Word frequency counter in R (case-insensitive, ignore punctuation)
 # Usage: Rscript R/word_counter.R <filename>
 
+# Determine the script name for nicer usage messages.
 script_name <- (function(default = "word_counter.R") {
   args <- commandArgs(trailingOnly = FALSE)
   file_arg <- grep("^--file=", args, value = TRUE)
@@ -19,6 +20,7 @@ if (length(args) != 1) {
 
 fn <- args[[1]]
 
+# Read the whole file or exit with a friendly message.
 safe_read_lines <- function(path) {
   tryCatch(readLines(path, warn = FALSE, encoding = "UTF-8"),
            error = function(e) {

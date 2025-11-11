@@ -1,3 +1,11 @@
+/**
+ * @file sigfpe_example.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Demonstrates catching and recovering from SIGFPE events.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 
 #pragma STDC FENV_ACCESS ON
@@ -13,6 +21,7 @@ static sigjmp_buf resume_env;
 static volatile sig_atomic_t fault_count = 0;
 static volatile double denominator_state = 0.0;
 
+/* SIGFPE handler that logs and longjmps back to safety. */
 static void handle_sigfpe(int sig) {
     (void)sig;
     ++fault_count;
@@ -21,6 +30,7 @@ static void handle_sigfpe(int sig) {
     siglongjmp(resume_env, 1);
 }
 
+/* Trigger a divide-by-zero once, then continue safely. */
 int main(void) {
     if (signal(SIGFPE, handle_sigfpe) == SIG_ERR) {
         perror("signal");

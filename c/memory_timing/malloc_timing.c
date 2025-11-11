@@ -1,5 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 
+/**
+ * @file malloc_timing.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Measures average malloc latency across various allocation sizes.
+ */
+
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,10 +20,12 @@ typedef struct AllocationScenario {
     size_t iterations;
 } AllocationScenario;
 
+/* Convert a timespec to fractional seconds. */
 static double timespec_to_seconds(const struct timespec *ts) {
     return ts->tv_sec + ts->tv_nsec / 1e9;
 }
 
+/* Average the allocation latency for a specific payload size. */
 static double measure_malloc_time(size_t element_count, size_t iterations) {
     const size_t bytes = element_count * sizeof(int);
 
@@ -51,6 +61,7 @@ static double measure_malloc_time(size_t element_count, size_t iterations) {
     return accumulated / iterations;
 }
 
+/* Iterate through the scenarios and print the timing table. */
 int main(void) {
     const AllocationScenario scenarios[] = {
         {"100 ints", 100, 50000},

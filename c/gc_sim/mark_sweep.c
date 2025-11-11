@@ -1,3 +1,11 @@
+/**
+ * @file mark_sweep.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Simulates a mark-and-sweep garbage collector with explicit stack/heap state.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +35,7 @@ typedef struct ProgramState {
     size_t heap_capacity;
 } ProgramState;
 
+/* Initialise a ProgramState with bounded stack/heap arrays. */
 static ProgramState create_program_state(size_t stack_capacity, size_t heap_capacity) {
     ProgramState state;
     state.stack = calloc(stack_capacity, sizeof(*state.stack));
@@ -42,6 +51,7 @@ static ProgramState create_program_state(size_t stack_capacity, size_t heap_capa
     return state;
 }
 
+/* Free all heap chunks plus the owning ProgramState buffers. */
 static void destroy_program_state(ProgramState *state) {
     if (!state) {
         return;
@@ -54,6 +64,7 @@ static void destroy_program_state(ProgramState *state) {
     free(state->stack);
 }
 
+/* Create a labeled heap chunk reserved for a certain fan-out. */
 static HeapChunk *allocate_chunk(ProgramState *state, const char *label, size_t reference_capacity) {
     if (state->heap_size >= state->heap_capacity) {
         fprintf(stderr, "Heap capacity exceeded when allocating %s.\n", label);
@@ -80,6 +91,7 @@ static HeapChunk *allocate_chunk(ProgramState *state, const char *label, size_t 
     return chunk;
 }
 
+/* Find a stack slot by name or return NULL. */
 static Var *find_variable(ProgramState *state, const char *name) {
     for (size_t i = 0; i < state->stack_size; ++i) {
         if (strcmp(state->stack[i].name, name) == 0) {
@@ -89,6 +101,7 @@ static Var *find_variable(ProgramState *state, const char *name) {
     return NULL;
 }
 
+/* Set (or create) a stack variable to reference a chunk. */
 static void update_stack(ProgramState *state, const char *name, HeapChunk *chunk) {
     Var *var = find_variable(state, name);
     if (!var) {
@@ -103,6 +116,7 @@ static void update_stack(ProgramState *state, const char *name, HeapChunk *chunk
     var->ref = chunk;
 }
 
+/* Wire one chunk's reference slot to another chunk. */
 static void connect_chunks(HeapChunk *from, size_t index, HeapChunk *to) {
     if (index >= from->reference_capacity) {
         fprintf(stderr, "Reference index %zu out of bounds for %s.\n", index, from->label);
@@ -111,6 +125,7 @@ static void connect_chunks(HeapChunk *from, size_t index, HeapChunk *to) {
     from->references[index] = to;
 }
 
+/* Recursively mark all chunks reachable from the argument. */
 static void mark_chunk(HeapChunk *chunk) {
     if (!chunk || chunk->marked) {
         return;
@@ -121,12 +136,14 @@ static void mark_chunk(HeapChunk *chunk) {
     }
 }
 
+/* Start marking from every stack root. */
 static void mark_phase(ProgramState *state) {
     for (size_t i = 0; i < state->stack_size; ++i) {
         mark_chunk(state->stack[i].ref);
     }
 }
 
+/* Free unmarked chunks and compact the heap array. */
 static void sweep_phase(ProgramState *state) {
     size_t write_index = 0;
     for (size_t read_index = 0; read_index < state->heap_size; ++read_index) {
@@ -142,12 +159,14 @@ static void sweep_phase(ProgramState *state) {
     state->heap_size = write_index;
 }
 
+/* Convenience wrapper that performs mark then sweep. */
 static void run_gc(ProgramState *state) {
     puts("\nRunning mark-and-sweep garbage collector...");
     mark_phase(state);
     sweep_phase(state);
 }
 
+/* Dump the stack/heap graph for illustration. */
 static void print_state(const ProgramState *state) {
     puts("\nStack:");
     for (size_t i = 0; i < state->stack_size; ++i) {
@@ -166,6 +185,7 @@ static void print_state(const ProgramState *state) {
     }
 }
 
+/* Assemble the sample stack roots and heap graph. */
 static void build_demo_state(ProgramState *state) {
     HeapChunk *alpha = allocate_chunk(state, "alpha", 2);
     HeapChunk *beta = allocate_chunk(state, "beta", 2);
@@ -190,6 +210,7 @@ static void build_demo_state(ProgramState *state) {
     update_stack(state, "helper", NULL);
 }
 
+/* Drive the GC demo: build state, run GC, show before/after. */
 int main(void) {
     ProgramState state = create_program_state(8, 16);
 

@@ -1,6 +1,9 @@
-/* detect_garbage.c
- * YOUR NAME HERE
- * Identify garbage heap chunks using the mark-and-sweep method
+/**
+ * @file detect_garbage.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Identifies reachable vs. garbage heap chunks in a toy mark-and-sweep demo.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +41,7 @@ typedef struct {
 } ProgramState;
 
 // make a new program state
+/* Allocate and initialise an empty ProgramState. */
 ProgramState *createProgramState() {
     ProgramState *state = (ProgramState *)malloc(sizeof(ProgramState));
     state->stack = (Var *)malloc(sizeof(Var) * MAX_STACK_SIZE);
@@ -47,6 +51,7 @@ ProgramState *createProgramState() {
     return state;
 }
 
+/* strdup helper that exits on allocation failure. */
 static char *duplicateString(const char *input) {
     size_t length = strlen(input) + 1;
     char *copy = (char *)malloc(length);
@@ -60,6 +65,7 @@ static char *duplicateString(const char *input) {
 
 // allocate a chunk and return the address to it,
 // but also add it to our list of allocated chunks on heap
+/* Allocate a heap chunk and register it with the state. */
 HeapChunk *HeapMalloc(ProgramState *state) {
     HeapChunk *chunk = (HeapChunk *)malloc(sizeof(HeapChunk));
     chunk->num_references = 0;
@@ -70,6 +76,7 @@ HeapChunk *HeapMalloc(ProgramState *state) {
 }
 
 // update the stack (either add name/value pair or update value)
+/* Add or update a stack variable to point at a chunk. */
 void setVar(ProgramState *state, const char *var_name, HeapChunk *chunk) {
     int found = 0;
     for (int i = 0; i < state->num_vars_on_stack; i++) {
@@ -88,6 +95,7 @@ void setVar(ProgramState *state, const char *var_name, HeapChunk *chunk) {
 // adds a reference from chunk_source to chunk_target.
 // method is humorously badly written, don't try to do this for too many
 // references.
+/* Append a pointer from chunk_source to chunk_target. */
 void addReference(HeapChunk *chunk_source, HeapChunk *chunk_target) {
     if (chunk_source->num_references++ == 0)
         chunk_source->references = malloc(sizeof(HeapChunk *));
@@ -107,6 +115,7 @@ void addReference(HeapChunk *chunk_source, HeapChunk *chunk_target) {
 // caught in any circular references (i.e. think about your stopping conditions).
 // Finally, you should loop through the heap array again, this time reporting for each
 // HeapChunk whether it is reachable or garbage.
+/* Depth-first mark from a given heap chunk. */
 static void markChunk(HeapChunk *chunk) {
     if (!chunk || chunk->marked) {
         return;
@@ -119,6 +128,7 @@ static void markChunk(HeapChunk *chunk) {
     }
 }
 
+/* Clear all marks, traverse from stack roots, then report reachability. */
 void markAndSweep(ProgramState *state) {
     if (!state) {
         return;
@@ -145,6 +155,7 @@ void markAndSweep(ProgramState *state) {
 }
 
 
+/* Build the custom scenario and print which chunks are garbage. */
 int main() {
     ProgramState *state = createProgramState();
 

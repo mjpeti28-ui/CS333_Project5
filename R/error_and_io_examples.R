@@ -3,6 +3,7 @@
 
 # Error handling --------------------------------------------------------------
 
+# Demonstrate tryCatch and withCallingHandlers usage.
 examples_error_handling <- function() {
   cat("Example: tryCatch with specific handlers\n")
   f <- function(x) {
@@ -41,6 +42,7 @@ examples_error_handling <- function() {
 
 # Text file I/O ---------------------------------------------------------------
 
+# Show how to write/read plain text files.
 examples_text_io <- function(tmpdir = tempdir()) {
   path <- file.path(tmpdir, "sample.txt")
   cat("hello\nworld\n", file = path)
@@ -57,6 +59,7 @@ examples_text_io <- function(tmpdir = tempdir()) {
 
 # Binary I/O ------------------------------------------------------------------
 
+# Show binary write/read with explicit sizes and endian.
 examples_binary_io <- function(tmpdir = tempdir()) {
   path <- file.path(tmpdir, "sample.bin")
   con <- file(path, open = "wb")
@@ -71,6 +74,7 @@ examples_binary_io <- function(tmpdir = tempdir()) {
 
 # URL reading -----------------------------------------------------------------
 
+# Fetch a tiny payload over HTTP with error handling.
 examples_url_io <- function() {
   txt <- tryCatch({
     con <- url("https://httpbin.org/uuid", open = "r")
@@ -88,6 +92,7 @@ examples_url_io <- function() {
 
 # Interactive input -----------------------------------------------------------
 
+# Demonstrate readline() when running interactively.
 examples_interactive <- function() {
   if (!interactive()) {
     cat("Not interactive; skipping readline() demo.\n")

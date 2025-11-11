@@ -1,8 +1,17 @@
+/**
+ * @file sigsegv_example.c
+ * @author Max Petite
+ * @date 2025-11-11
+ *
+ * Shows how to intercept SIGSEGV and exit after notifying the user.
+ */
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+/* SIGSEGV handler that notifies the user before exiting. */
 static void handle_sigsegv(int sig) {
     (void)sig;
     const char message[] = "Segmentation fault caught! Cleaning up and exiting.\n";
@@ -10,6 +19,7 @@ static void handle_sigsegv(int sig) {
     _exit(EXIT_FAILURE);
 }
 
+/* Intentionally dereference NULL to demonstrate the handler. */
 int main(void) {
     if (signal(SIGSEGV, handle_sigsegv) == SIG_ERR) {
         perror("signal");

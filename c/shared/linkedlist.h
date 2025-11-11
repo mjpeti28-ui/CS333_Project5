@@ -1,7 +1,7 @@
 /**
  * @file linkedlist.h
  * @author Max Petite
- * @date 2025-10-30
+ * @date 2025-11-11
  *
  * Declares a generic singly linked list interface.
  */
