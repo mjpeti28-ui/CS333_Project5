@@ -47,6 +47,17 @@ ProgramState *createProgramState() {
     return state;
 }
 
+static char *duplicateString(const char *input) {
+    size_t length = strlen(input) + 1;
+    char *copy = (char *)malloc(length);
+    if (!copy) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    memcpy(copy, input, length);
+    return copy;
+}
+
 // allocate a chunk and return the address to it,
 // but also add it to our list of allocated chunks on heap
 HeapChunk *HeapMalloc(ProgramState *state) {
@@ -68,7 +79,7 @@ void setVar(ProgramState *state, char *var_name, HeapChunk *chunk) {
         }
     }
     if (!found) {
-        state->stack[state->num_vars_on_stack].name = strdup(var_name);
+        state->stack[state->num_vars_on_stack].name = duplicateString(var_name);
         state->stack[state->num_vars_on_stack].reference = chunk;
         state->num_vars_on_stack++;
     }
@@ -96,8 +107,41 @@ void addReference(HeapChunk *chunk_source, HeapChunk *chunk_target) {
 // caught in any circular references (i.e. think about your stopping conditions).
 // Finally, you should loop through the heap array again, this time reporting for each
 // HeapChunk whether it is reachable or garbage.
+static void markChunk(HeapChunk *chunk) {
+    if (!chunk || chunk->marked) {
+        return;
+    }
+
+    chunk->marked = 1;
+
+    for (int i = 0; i < chunk->num_references; i++) {
+        markChunk(chunk->references[i]);
+    }
+}
+
 void markAndSweep(ProgramState *state) {
-    ;
+    if (!state) {
+        return;
+    }
+
+    // Unmark all chunks before performing the depth-first traversal.
+    for (int i = 0; i < state->num_heap_chunks; i++) {
+        if (state->heap[i]) {
+            state->heap[i]->marked = 0;
+        }
+    }
+
+    // Mark any chunks that can be reached from the stack roots.
+    for (int i = 0; i < state->num_vars_on_stack; i++) {
+        markChunk(state->stack[i].reference);
+    }
+
+    // Report which chunks are still reachable and which are garbage.
+    for (int i = 0; i < state->num_heap_chunks; i++) {
+        HeapChunk *chunk = state->heap[i];
+        const char *status = (chunk && chunk->marked) ? "reachable" : "garbage";
+        printf("HeapChunk[%d] @ %p is %s.\n", i, (void *)chunk, status);
+    }
 }
 
 
