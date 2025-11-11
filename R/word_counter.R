@@ -20,7 +20,7 @@ if (length(args) != 1) {
 
 fn <- args[[1]]
 
-# Read the whole file or exit with a friendly message.
+# Read the whole file or exit with a message.
 safe_read_lines <- function(path) {
   tryCatch(readLines(path, warn = FALSE, encoding = "UTF-8"),
            error = function(e) {

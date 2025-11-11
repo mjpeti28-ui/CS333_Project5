@@ -131,12 +131,17 @@ gcc c/memory_timing/malloc_timing.c -o malloc_timing
 **Run**
 ```bash
 $ ./malloc_timing
-Average allocation time per malloc call:
-Scenario	Iterations	Average seconds
-100 ints	  50000	0.000000047
-10K ints	  10000	0.000000397
-1M ints 	    500	0.000000396
+Average allocation time per malloc call: 
+Scenario    Iterations  Average seconds
+100 ints    50000       0.000000034 
+10K ints    10000       0.000000384
+ 1M ints    500         0.000000370
 ```
+
+**Graph**
+
+![alt text](image.png)
+
 
 **Findings**
 - Each scenario warms up once, then measures hundreds/thousands of allocations, so the averages above exclude first-call startup cost as requested.
