@@ -2,9 +2,18 @@
 # Word frequency counter in R (case-insensitive, ignore punctuation)
 # Usage: Rscript R/word_counter.R <filename>
 
+script_name <- (function(default = "word_counter.R") {
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=", args, value = TRUE)
+  if (length(file_arg) > 0) {
+    return(basename(sub("^--file=", "", tail(file_arg, n = 1))))
+  }
+  default
+})()
+
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 1) {
-  write(sprintf("Usage: %s <file>", basename(sys.frame(1)$ofile %||% "word_counter.R")), stderr())
+  write(sprintf("Usage: Rscript %s <file>", script_name), stderr())
   quit(status = 1)
 }
 
@@ -17,9 +26,6 @@ safe_read_lines <- function(path) {
              quit(status = 1)
            })
 }
-
-# Null-coalescing helper (base R compatible)
-`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 lines <- safe_read_lines(fn)
 text <- tolower(paste(lines, collapse = " "))

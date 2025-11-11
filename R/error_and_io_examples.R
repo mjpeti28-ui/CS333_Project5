@@ -16,7 +16,6 @@ examples_error_handling <- function() {
       f(x),
       warning = function(w) {
         cat("  caught warning:", conditionMessage(w), "\n")
-        invokeRestart("muffleWarning")
         NA_real_
       },
       error = function(e) {
@@ -73,13 +72,17 @@ examples_binary_io <- function(tmpdir = tempdir()) {
 # URL reading -----------------------------------------------------------------
 
 examples_url_io <- function() {
-  url_con <- url("https://httpbin.org/uuid", open = "r")
-  on.exit(close(url_con), add = TRUE)
-  txt <- tryCatch(readLines(url_con, warn = FALSE), error = function(e) "<network error>")
-  if (is.character(txt)) {
+  txt <- tryCatch({
+    con <- url("https://httpbin.org/uuid", open = "r")
+    on.exit(close(con), add = TRUE)
+    readLines(con, warn = FALSE)
+  }, error = function(e) {
+    cat("Unable to fetch URL:", conditionMessage(e), "\n")
+    NULL
+  })
+
+  if (!is.null(txt) && length(txt) > 0) {
     cat("Fetched bytes from URL (first line):", substr(txt[1], 1, 60), "...\n")
-  } else {
-    cat("URL read returned non-character result\n")
   }
 }
 

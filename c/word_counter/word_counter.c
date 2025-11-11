@@ -4,7 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../linkedlist.h"
+#include "../shared/linkedlist.h"
+
+/*
+ * Extension: Robustness & Profiling (explicitly marked)
+ * - Robust CLI/file handling (argc check, fopen error): already present.
+ * - Empty-file handling: if no tokens are found, print a friendly message and exit.
+ * - Token-length warning: warn once if any token exceeds MAX_WORD_LENGTH-1 and is truncated.
+ * - Profiling note: build with `gcc -pg c/word_counter/word_counter.c linkedlist.c -o word_counter_pg`
+ *   and run `gprof` as shown in README.
+ */
 
 #define MAX_WORD_LENGTH 128
 
@@ -41,6 +50,9 @@ static WordCount *create_wordcount(const char *word) {
     return wc;
 }
 
+/* Extension: track whether we truncated any token due to MAX_WORD_LENGTH. */
+static int g_truncated_token_seen = 0;
+
 static int comp_word_to_key(void *payload, void *target) {
     const WordCount *wc = (const WordCount *)payload;
     const char *key = (const char *)target;
@@ -73,6 +85,8 @@ static int read_next_word(FILE *file, char *buffer, size_t buffer_size) {
             if (index + 1 < buffer_size) {
                 buffer[index++] = (char)ch;
             } else {
+                /* Extension: record that we hit the max token length. */
+                g_truncated_token_seen = 1;
                 break;
             }
         } else if (index > 0) {
@@ -167,8 +181,22 @@ int main(int argc, char **argv) {
 
     fclose(file);
 
+    /* Extension: handle empty file (or no tokens) explicitly. */
+    if (ll_size(list) == 0) {
+        puts("No words found.");
+        ll_clear(list, free_wordcount);
+        free(list);
+        return EXIT_SUCCESS;
+    }
+
     puts("Top 20 words by frequency:");
     print_top_words(list, 20);
+
+    /* Extension: warn once if any token was truncated. */
+    if (g_truncated_token_seen) {
+        fprintf(stderr, "Warning: one or more tokens exceeded %d characters and were truncated.\n",
+                MAX_WORD_LENGTH - 1);
+    }
 
     ll_clear(list, free_wordcount);
     free(list);
